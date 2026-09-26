@@ -1,0 +1,62 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum PaymentStatus {
+  CREATED
+  PAID
+  FAILED
+}
+
+enum IdeaStatus {
+  IDEA
+  PLANNED
+  TESTING
+  IMPLEMENTED
+}
+
+model User {
+  id           String        @id @default(cuid())
+  name         String
+  email        String        @unique
+  passwordHash String?
+  googleId     String?       @unique
+  avatarUrl    String?
+  createdAt    DateTime      @default(now())
+  payments     Payment[]
+  ideas        PaymentIdea[]
+}
+
+model Payment {
+  id                String        @id @default(cuid())
+  userId            String
+  user             User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  amount            Int
+  currency          String         @default("INR")
+  description       String
+  razorpayOrderId   String?        @unique
+  razorpayPaymentId String?        @unique
+  razorpaySignature String?
+  status            PaymentStatus  @default(CREATED)
+  createdAt         DateTime       @default(now())
+  paidAt            DateTime?
+}
+
+model PaymentIdea {
+  id          String      @id @default(cuid())
+  userId      String
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title       String
+  description String
+  category    String      @default("Payments")
+  priority    String      @default("Medium")
+  status      IdeaStatus  @default(IDEA)
+  notes       String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+}
